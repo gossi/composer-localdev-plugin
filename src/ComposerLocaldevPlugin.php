@@ -8,7 +8,7 @@ use Composer\Composer;
 class ComposerLocaldevPlugin implements PluginInterface {
 	
 	public function activate(Composer $composer, IOInterface $io) {
-		$repo = new LocalRepository();
+		$repo = new LocalRepository($composer->getConfig());
 		$composer->getRepositoryManager()->addRepository($repo);
 	}
 	
