@@ -48,7 +48,7 @@ class LocalRepository extends ArrayRepository {
 			
 			foreach ($roots as $root) {
 				foreach (new \DirectoryIterator($root) as $file) {
-					if ($file->isDir()) {
+					if ($file->isDir() && !$file->isDot()) {
 						$dir = str_replace('//', '/', $root . '/' . $file->getFilename());
 						$this->retrieveVendorPackages($file->getFilename(), $dir);
 					}
@@ -91,7 +91,7 @@ class LocalRepository extends ArrayRepository {
 	protected function retrieveVendorPackages($vendor, $path) {
 		if (file_exists($path)) {
 			foreach (new \DirectoryIterator($path) as $file) {
-				if ($file->isDir()) {
+				if ($file->isDir() && !$file->isDot()) {
 					$name = str_replace('//', '/', $vendor . '/' . $file->getFilename());
 					$this->parsePackage($name, $file->getPathname());
 				}
@@ -110,8 +110,7 @@ class LocalRepository extends ArrayRepository {
 		
 		echo 'Found Package: ' . $name . ' at ' . $path . "\n";
 
-		$json = json_decode($composer->read(), true);
-		$package = $this->loader->load($json);
+		$package = $this->loader->load($composer->read());
 		
 		if ($package->getName() == strtolower($name)) {
 			echo 'Package and path name match'."\n";
