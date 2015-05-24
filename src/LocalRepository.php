@@ -28,6 +28,7 @@ class LocalRepository extends ArrayRepository {
 		
 		if ($this->config->has('localdev')) {
 			$localdev = $this->config->get('localdev');
+			print_r($localdev);
 
 			$this->parseGlobal($localdev);
 			$this->parseVendors($localdev);
@@ -62,6 +63,9 @@ class LocalRepository extends ArrayRepository {
 			return strpos($key, '/') === false;
 		});
 		
+		echo 'Parsed Vendors: ';
+		print_r($keys);
+
 		foreach ($keys as $vendor) {
 			$locations = $localdev[$vendor];
 			$roots = is_array($locations) ? $locations: array($locations);
@@ -75,6 +79,9 @@ class LocalRepository extends ArrayRepository {
 		$keys = array_filter(array_keys($localdev), function ($key) {
 			return strpos($key, '/') !== false;
 		});
+		
+		echo 'Parsed Packages: ';
+		print_r($keys);
 		
 		foreach ($keys as $name) {
 			$this->parsePackage($name, $localdev[$name]);
