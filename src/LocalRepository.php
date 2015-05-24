@@ -2,6 +2,7 @@
 namespace gossi\composer\localdev;
 
 use Composer\Package\PackageInterface;
+use Composer\Package\CompletePackage;
 use Composer\Repository\ArrayRepository;
 use Composer\Config;
 use Composer\Package\Loader\ArrayLoader;
@@ -110,8 +111,11 @@ class LocalRepository extends ArrayRepository {
 		
 		echo 'Found Package: ' . $name . ' at ' . $path . "\n";
 
-		$package = $this->loader->load($composer->read());
+		$json = $composer->read();
+		$json['version'] = 'dev-live';
 		
+		$package = $this->loader->load($json);
+
 		if ($package->getName() == strtolower($name)) {
 			echo 'Package and path name match'."\n";
 			$this->addPackage($package);
