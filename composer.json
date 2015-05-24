@@ -1,0 +1,23 @@
+{
+	"keywords" : [
+		"composer",
+		"local",
+		"development"
+	],
+	"autoload" : {
+		"psr-4" : {
+			"gossi\\composer\\localdev\\" : "src"
+		}
+	},
+	"name" : "gossi/composer-localdev-plugin",
+	"type" : "composer-plugin",
+	"description" : "Composer Plugin for local development",
+	"license" : "MIT",
+	"require" : {
+		"php" : ">=5.4",
+		"composer-plugin-api" : "1.0.0"
+	},
+	"require-dev" : {
+		"composer/composer" : "master-dev"
+	}
+}
