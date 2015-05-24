@@ -44,7 +44,7 @@ class LocalRepository extends ArrayRepository {
 	}
 	
 	protected function parseGlobal($localdev) {
-		if (isset($localdev['']) && file_exists($localdev[''])) {
+		if (isset($localdev[''])) {
 			$roots = is_array($localdev['']) ? $localdev[''] : array($localdev['']);
 			
 			foreach ($roots as $root) {
