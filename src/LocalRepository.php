@@ -114,15 +114,17 @@ class LocalRepository extends ArrayRepository {
 		
 		echo 'Found Package: ' . $name . ' at ' . $path . "\n";
 
-		$json = $composer->read();
-		$json['version'] = 'dev-live';
+		try {
+			$json = $composer->read();
+			$json['version'] = 'dev-live';
 		
-		$package = $this->loader->load($json);
-
-		if ($package->getName() == strtolower($name)) {
-			echo 'Package and path name match'."\n";
-			$this->addPackage($package);
-		}
+			$package = $this->loader->load($json);
+			
+			if ($package->getName() == strtolower($name)) {
+				echo '=> Package and path name match'."\n";
+				$this->addPackage($package);
+			}
+		} catch (\Exception $e) {}
 	}
 
 }
