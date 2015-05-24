@@ -100,7 +100,9 @@ class LocalRepository extends ArrayRepository {
 	}
 	
 	protected function parsePackage($name, $path) {
+		echo 'Parse Package ' . $name . ' at ' . $path . "\n";
 		$composer = new JsonFile(str_replace('//', '/', $path . '/composer.json'));
+		echo 'Path: '.$composer->getPath()."\n";
 		
 		if (!$composer->exists()) {
 			return;
