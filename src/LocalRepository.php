@@ -5,6 +5,7 @@ use Composer\Package\PackageInterface;
 use Composer\Repository\ArrayRepository;
 use Composer\Config;
 use Composer\Package\Loader\ArrayLoader;
+use Composer\Json\JsonFile;
 
 class LocalRepository extends ArrayRepository {
 	
@@ -32,6 +33,8 @@ class LocalRepository extends ArrayRepository {
 			$this->parseVendors($localdev);
 			$this->parsePackages($localdev);
 		}
+		
+		echo "Packages: " . count($this->packages) . "\n";
 		
 		foreach ($this->packages as $package) {
 			echo $package->getName() . "\n";
@@ -90,16 +93,19 @@ class LocalRepository extends ArrayRepository {
 	}
 	
 	protected function parsePackage($name, $path) {
-		$composer = str_replace('//', '/', $path . '/composer.json');
+		$composer = new JsonFile(str_replace('//', '/', $path . '/composer.json'));
 		
-		if (!file_exists($composer)) {
+		if (!$composer->exists()) {
 			return;
 		}
 		
-		$json = json_decode(file_get_contents($composer), true);
+		echo 'Found Package: ' . $name . ' at ' . $path . "\n";
+
+		$json = json_decode($composer->read(), true);
 		$package = $this->loader->load($json);
 		
 		if ($package->getName() == strtolower($name)) {
+			echo 'Package and path name match'."\n";
 			$this->addPackage($package);
 		}
 	}
