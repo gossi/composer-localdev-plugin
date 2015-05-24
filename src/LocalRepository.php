@@ -25,8 +25,10 @@ class LocalRepository extends ArrayRepository {
 	protected function initialize() {
 		$this->packages = array();
 	
+		var_dump($this->config->has('localdev'));
 		if ($this->config->has('localdev')) {
 			$localdev = $this->config->get('localdev');
+			var_dump($localdev);
 
 			$this->parseGlobal($localdev);
 			$this->parseVendors($localdev);
