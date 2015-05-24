@@ -122,7 +122,9 @@ class LocalRepository extends ArrayRepository {
 			
 			if ($package->getName() == strtolower($name)) {
 				echo '=> Package and path name match'."\n";
-				$this->addPackage($package);
+				if (!$this->hasPackage($package)) {
+					$this->addPackage($package);
+				}
 			}
 		} catch (\Exception $e) {}
 	}
