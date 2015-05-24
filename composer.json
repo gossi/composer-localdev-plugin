@@ -14,13 +14,13 @@
 	"description" : "Composer Plugin for local development",
 	"license" : "MIT",
 	"require" : {
-		"php" : ">=5.4",
+		"php" : ">=5.3",
 		"composer-plugin-api" : "1.0.0"
 	},
 	"require-dev" : {
 		"composer/composer" : "master-dev"
 	},
-	"extra": {
-	    "class" : "\\gossi\\composer\\localdev\\ComposerLocaldevPlugin"
+	"extra" : {
+		"class" : "\\gossi\\composer\\localdev\\ComposerLocaldevPlugin"
 	}
 }
