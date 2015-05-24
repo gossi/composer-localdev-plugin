@@ -19,5 +19,8 @@
 	},
 	"require-dev" : {
 		"composer/composer" : "master-dev"
+	},
+	"extra": {
+	    "class" : "\\gossi\\composer\\localdev\\ComposerLocaldevPlugin"
 	}
 }
