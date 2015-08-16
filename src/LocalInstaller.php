@@ -49,6 +49,8 @@ class LocalInstaller implements InstallerInterface {
 		$installer = $this->getDedicatedInstaller($package);
 		$installer->install($repo, $package);
 		
+		printf("Install %s with %s", $package->getName(), get_class($installer));
+		
 		if ($this->handlePackage($package)) {
 			printf("Install from local repo: %s\n", $package->getName());
 		} else {
