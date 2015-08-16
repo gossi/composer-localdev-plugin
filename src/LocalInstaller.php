@@ -26,9 +26,9 @@ class LocalInstaller implements InstallerInterface {
 
 	public function install(InstalledRepositoryInterface $repo, PackageInterface $package) {
 		if ($this->repo->hasPackage($package)) {
-			echo 'Install from local repo: ' . $package->getName();
+			printf("Install from local repo: %s\n", $package->getName());
 		} else {
-			echo 'Do not Install from local repo: ' . $package->getName();
+			printf("Do not install from local repo: %s\n", $package->getName());
 		}
 	}
 

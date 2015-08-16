@@ -9,8 +9,9 @@ class ComposerLocaldevPlugin implements PluginInterface {
 	
 	public function activate(Composer $composer, IOInterface $io) {
 		$repo = new LocalRepository($composer->getConfig());
-		$installer = new LocalInstaller($composer, $repo);
 		$composer->getRepositoryManager()->addRepository($repo);
+		
+		$installer = new LocalInstaller($composer, $repo);
 		$composer->getInstallationManager()->addInstaller($installer);
 	}
 
