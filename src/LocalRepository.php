@@ -12,6 +12,7 @@ class LocalRepository extends ArrayRepository {
 	
 	protected $config;
 	protected $loader;
+	protected $paths;
 	
 	/**
 	 * @param Config $config
@@ -19,8 +20,16 @@ class LocalRepository extends ArrayRepository {
 	public function __construct(Config $config) {
 		$this->config = $config;
 		$this->loader = new ArrayLoader();
+		$this->paths = array();
 	}
 	
+	public function getPath($name) {
+		if (isset($this->paths[$name])) {
+			return $this->paths[$name];
+		}
+		return null;
+	}
+
 	/* (non-PHPdoc)
 	 * @see \Composer\Repository\ArrayRepository::initialize()
 	 */
@@ -107,6 +116,7 @@ class LocalRepository extends ArrayRepository {
 			if ($package->getName() == strtolower($name)) {
 				if (!$this->hasPackage($package)) {
 					$this->addPackage($package);
+					$this->paths[strtolower($name)] = $path;
 				}
 			}
 		} catch (\Exception $e) {}

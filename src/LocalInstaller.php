@@ -5,21 +5,25 @@ use Composer\Repository\InstalledRepositoryInterface;
 use Composer\Installer\InstallerInterface;
 use Composer\Package\PackageInterface;
 use Composer\Composer;
+use Composer\Util\Filesystem;
 
 class LocalInstaller implements InstallerInterface {
 	
 	private $composer;
 	private $repo;
 	private $installers;
+	private $filesystem;
 	
 	public function __construct(Composer $composer, LocalRepository $repo) {
 		$this->composer = $composer;
 		$this->repo = $repo;
+		$this->filesystem = new Filesystem();
 	}
 	
 	private function getInstallers() {
 		if ($this->installers == null) {
-			$this->installers = clone $this->composer->getInstallationManager();
+			$installManager = $this->composer->getInstallationManager();
+			$this->installers = clone $installManager;
 			$this->installers->removeInstaller($this);
 		}
 		return $this->installers;
@@ -31,38 +35,85 @@ class LocalInstaller implements InstallerInterface {
 	 * @return InstallerInterface
 	 */
 	private function getDedicatedInstaller(PackageInterface $package) {
-		return $this->installers->getInstaller($package->getType());
+		return $this->getInstallers()->getInstaller($package->getType());
 	}
 	
 	private function handlePackage(PackageInterface $package) {
-		return $this->repo->hasPackage($package);
+		$packageId = $package->getName();
+		
+		foreach ($this->repo->getPackages() as $repoPackage) {
+			if ($packageId === $repoPackage->getName()) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	private function ensureSymlink(PackageInterface $package) {
+		$installPath = $this->getDedicatedInstaller($package)->getInstallPath($package);
+		$originPath = $this->repo->getPath($package->getName());
+		
+		// remove installation first...
+		if (file_exists($installPath)) {
+			$this->filesystem->removeDirectory($installPath);
+		}
+		
+		// ... then create a symlink
+		$this->symlink($originPath, $installPath);
+	}
+	
+	/**
+	 * A lightweight method of the symlink method in Symfony\Filesystem
+	 *
+	 * Creates a symbolic link or copy a directory.
+	 *
+	 * @param string $originDir The origin directory path
+	 * @param string $targetDir The symbolic link name
+	 * @param Boolean $copyOnWindows Whether to copy files if on Windows
+	 *
+	 * @throws \Exception When symlink fails
+	 */
+	private function symlink($originDir, $targetDir) {
+		@mkdir(dirname($targetDir), 0777, true);
+	
+		$ok = false;
+		if (is_link($targetDir)) {
+			if (readlink($targetDir) != $originDir) {
+				$this->filesystem->remove($targetDir);
+			} else {
+				$ok = true;
+			}
+		}
+	
+		if (!$ok) {
+			if (true !== @symlink($originDir, $targetDir)) {
+				$report = error_get_last();
+				if (is_array($report)) {
+					if (defined('PHP_WINDOWS_VERSION_MAJOR') && false !== strpos($report['message'], 'error code(1314)')) {
+						throw new \Exception('Unable to create symlink due to error code 1314: \'A required privilege is not held by the client\'. Do you have the required Administrator-rights?');
+					}
+				}
+				throw new \Exception(sprintf('Failed to create symbolic link from %s to %s', $originDir, $targetDir));
+			}
+		}
 	}
 	
 	public function uninstall(InstalledRepositoryInterface $repo, PackageInterface $package) {
-		if ($this->handlePackage($package)) {
-			
-		}
-		// TODO Auto-generated method stub
+		$installer = $this->getDedicatedInstaller($package);
+		$installer->uninstall($repo, $package);
 	}
 
 	public function install(InstalledRepositoryInterface $repo, PackageInterface $package) {
 		$installer = $this->getDedicatedInstaller($package);
 		$installer->install($repo, $package);
 		
-		printf("Install %s with %s", $package->getName(), get_class($installer));
-		
 		if ($this->handlePackage($package)) {
-			printf("Install from local repo: %s\n", $package->getName());
-		} else {
-			printf("Do not install from local repo: %s\n", $package->getName());
+			$this->ensureSymlink($package);
 		}
 	}
 
 	public function isInstalled(InstalledRepositoryInterface $repo, PackageInterface $package) {
-		echo "LocalInstaller.isInstalled(): Installed Packages: \n";
-		foreach ($repo->getPackages() as $package) {
-			printf("Installed Package: %s\n", $package->getName());
-		}
 		return $repo->hasPackage($package);
 	}
 	
@@ -71,10 +122,14 @@ class LocalInstaller implements InstallerInterface {
 	}
 	
 	public function update(InstalledRepositoryInterface $repo, PackageInterface $initial, PackageInterface $target) {
-		// TODO Auto-generated method stub
+		$this->getDedicatedInstaller($initial)->update($repo, $initial, $target);
+		
+		if ($this->handlePackage($target)) {
+			$this->ensureSymlink($target);
+		}
 	}
 	
 	public function getInstallPath(PackageInterface $package) {
-		// TODO Auto-generated method stub
+		return $this->getDedicatedInstaller($package)->getInstallPath($package);
 	}
 }
