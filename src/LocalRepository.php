@@ -29,17 +29,10 @@ class LocalRepository extends ArrayRepository {
 		
 		if ($this->config->has('localdev')) {
 			$localdev = $this->config->get('localdev');
-			print_r($localdev);
 
 			$this->parseGlobal($localdev);
 			$this->parseVendors($localdev);
 			$this->parsePackages($localdev);
-		}
-		
-		echo "Packages: " . count($this->packages) . "\n";
-		
-		foreach ($this->packages as $package) {
-			echo $package->getName() . "\n";
 		}
 	}
 	
@@ -63,9 +56,6 @@ class LocalRepository extends ArrayRepository {
 		$keys = array_filter(array_keys($localdev), function ($key) {
 			return strpos($key, '/') === false;
 		});
-		
-		echo 'Parsed Vendors: ';
-		print_r($keys);
 
 		foreach ($keys as $vendor) {
 			$locations = $localdev[$vendor];
@@ -80,9 +70,6 @@ class LocalRepository extends ArrayRepository {
 		$keys = array_filter(array_keys($localdev), function ($key) {
 			return strpos($key, '/') !== false;
 		});
-		
-		echo 'Parsed Packages: ';
-		print_r($keys);
 		
 		foreach ($keys as $name) {
 			$this->parsePackage($name, $localdev[$name]);
@@ -104,15 +91,12 @@ class LocalRepository extends ArrayRepository {
 		if (is_link($path)) {
 			return;
 		}
-		echo 'Parse Package ' . $name . ' at ' . $path . "\n";
+
 		$composer = new JsonFile(str_replace('//', '/', $path . '/composer.json'));
-		echo 'Path: '.$composer->getPath()."\n";
 		
 		if (!$composer->exists()) {
 			return;
 		}
-		
-		echo 'Found Package: ' . $name . ' at ' . $path . "\n";
 
 		try {
 			$json = $composer->read();
@@ -121,7 +105,6 @@ class LocalRepository extends ArrayRepository {
 			$package = $this->loader->load($json);
 			
 			if ($package->getName() == strtolower($name)) {
-				echo '=> Package and path name match'."\n";
 				if (!$this->hasPackage($package)) {
 					$this->addPackage($package);
 				}
