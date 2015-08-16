@@ -106,7 +106,6 @@ class LocalRepository extends ArrayRepository {
 			
 			if ($package->getName() == strtolower($name)) {
 				if (!$this->hasPackage($package)) {
-					printf("Local Repo: %s\n", $package->getName());
 					$this->addPackage($package);
 				}
 			}
