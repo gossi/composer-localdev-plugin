@@ -11,7 +11,7 @@ class ComposerLocaldevPlugin implements PluginInterface {
 		$repo = new LocalRepository($composer->getConfig());
 		$composer->getRepositoryManager()->addRepository($repo);
 		
-		$installer = new LocalInstaller($composer, $repo);
+		$installer = new LocalInstaller($composer, $io, $repo);
 		$composer->getInstallationManager()->addInstaller($installer);
 	}
 

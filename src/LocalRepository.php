@@ -102,7 +102,7 @@ class LocalRepository extends ArrayRepository {
 		}
 
 		$composer = new JsonFile(str_replace('//', '/', $path . '/composer.json'));
-		
+
 		if (!$composer->exists()) {
 			return;
 		}

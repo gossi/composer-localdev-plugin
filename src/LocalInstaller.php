@@ -6,16 +6,19 @@ use Composer\Installer\InstallerInterface;
 use Composer\Package\PackageInterface;
 use Composer\Composer;
 use Composer\Util\Filesystem;
+use Composer\IO\IOInterface;
 
 class LocalInstaller implements InstallerInterface {
 	
 	private $composer;
+	private $io;
 	private $repo;
 	private $installers;
 	private $filesystem;
 	
-	public function __construct(Composer $composer, LocalRepository $repo) {
+	public function __construct(Composer $composer, IOInterface $io, LocalRepository $repo) {
 		$this->composer = $composer;
+		$this->io = $io;
 		$this->repo = $repo;
 		$this->filesystem = new Filesystem();
 	}
@@ -61,8 +64,11 @@ class LocalInstaller implements InstallerInterface {
 		
 		// ... then create a symlink
 		$this->symlink($originPath, $installPath);
+		
+		$this->io->write(sprintf('    => Symlinked <info>%s</info> from <fg=magenta>%s</>', $package->getName(), $installPath), true);
+		$this->io->write('', true);
 	}
-	
+
 	/**
 	 * A lightweight method of the symlink method in Symfony\Filesystem
 	 *
@@ -98,7 +104,7 @@ class LocalInstaller implements InstallerInterface {
 			}
 		}
 	}
-	
+
 	public function uninstall(InstalledRepositoryInterface $repo, PackageInterface $package) {
 		$installer = $this->getDedicatedInstaller($package);
 		$installer->uninstall($repo, $package);
@@ -116,11 +122,11 @@ class LocalInstaller implements InstallerInterface {
 	public function isInstalled(InstalledRepositoryInterface $repo, PackageInterface $package) {
 		return $repo->hasPackage($package);
 	}
-	
+
 	public function supports($packageType) {
 		return true;
 	}
-	
+
 	public function update(InstalledRepositoryInterface $repo, PackageInterface $initial, PackageInterface $target) {
 		$this->getDedicatedInstaller($initial)->update($repo, $initial, $target);
 		
@@ -128,7 +134,7 @@ class LocalInstaller implements InstallerInterface {
 			$this->ensureSymlink($target);
 		}
 	}
-	
+
 	public function getInstallPath(PackageInterface $package) {
 		return $this->getDedicatedInstaller($package)->getInstallPath($package);
 	}
