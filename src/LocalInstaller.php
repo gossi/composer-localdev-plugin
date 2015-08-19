@@ -7,14 +7,15 @@ use Composer\Package\PackageInterface;
 use Composer\Composer;
 use Composer\Util\Filesystem;
 use Composer\IO\IOInterface;
+use Composer\Installer\InstallationManager;
 
 class LocalInstaller implements InstallerInterface {
 	
 	private $composer;
 	private $io;
 	private $repo;
-	private $installers;
 	private $filesystem;
+	private $installManager;
 	
 	public function __construct(Composer $composer, IOInterface $io, LocalRepository $repo) {
 		$this->composer = $composer;
@@ -23,13 +24,12 @@ class LocalInstaller implements InstallerInterface {
 		$this->filesystem = new Filesystem();
 	}
 	
-	private function getInstallers() {
-		if ($this->installers == null) {
-			$installManager = $this->composer->getInstallationManager();
-			$this->installers = clone $installManager;
-			$this->installers->removeInstaller($this);
-		}
-		return $this->installers;
+	public function getInstallerManager() {
+		return $this->installManager;
+	}
+	
+	public function setInstallManager(InstallationManager $installManager) {
+		$this->installManager = $installManager;
 	}
 	
 	/**
@@ -38,7 +38,7 @@ class LocalInstaller implements InstallerInterface {
 	 * @return InstallerInterface
 	 */
 	private function getDedicatedInstaller(PackageInterface $package) {
-		return $this->getInstallers()->getInstaller($package->getType());
+		return $this->getInstallerManager()->getInstaller($package->getType());
 	}
 	
 	private function handlePackage(PackageInterface $package) {
@@ -91,7 +91,7 @@ class LocalInstaller implements InstallerInterface {
 				$ok = true;
 			}
 		}
-	
+
 		if (!$ok) {
 			if (true !== @symlink($originDir, $targetDir)) {
 				$report = error_get_last();
@@ -111,9 +111,10 @@ class LocalInstaller implements InstallerInterface {
 	}
 
 	public function install(InstalledRepositoryInterface $repo, PackageInterface $package) {
+// 		printf("Handle Install: %s\n", $package->getName());
 		$installer = $this->getDedicatedInstaller($package);
 		$installer->install($repo, $package);
-		
+
 		if ($this->handlePackage($package)) {
 			$this->ensureSymlink($package);
 		}
