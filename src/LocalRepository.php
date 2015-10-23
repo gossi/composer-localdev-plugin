@@ -1,12 +1,10 @@
 <?php
 namespace gossi\composer\localdev;
 
-use Composer\Package\PackageInterface;
-use Composer\Package\CompletePackage;
-use Composer\Repository\ArrayRepository;
 use Composer\Config;
-use Composer\Package\Loader\ArrayLoader;
 use Composer\Json\JsonFile;
+use Composer\Package\Loader\ArrayLoader;
+use Composer\Repository\ArrayRepository;
 
 class LocalRepository extends ArrayRepository {
 	

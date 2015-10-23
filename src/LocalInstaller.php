@@ -1,13 +1,13 @@
 <?php
 namespace gossi\composer\localdev;
 
-use Composer\Repository\InstalledRepositoryInterface;
-use Composer\Installer\InstallerInterface;
-use Composer\Package\PackageInterface;
 use Composer\Composer;
-use Composer\Util\Filesystem;
-use Composer\IO\IOInterface;
 use Composer\Installer\InstallationManager;
+use Composer\Installer\InstallerInterface;
+use Composer\IO\IOInterface;
+use Composer\Package\PackageInterface;
+use Composer\Repository\InstalledRepositoryInterface;
+use Composer\Util\Filesystem;
 
 class LocalInstaller implements InstallerInterface {
 	
@@ -65,7 +65,7 @@ class LocalInstaller implements InstallerInterface {
 		// ... then create a symlink
 		$this->symlink($originPath, $installPath);
 		
-		$this->io->write(sprintf('    => Symlinked <info>%s</info> from <fg=magenta>%s</>', $package->getName(), $installPath), true);
+		$this->io->write(sprintf('    => Symlinked <info>%s</info> from <fg=magenta>%s</>', $package->getName(), $originPath), true);
 		$this->io->write('', true);
 	}
 
@@ -76,13 +76,12 @@ class LocalInstaller implements InstallerInterface {
 	 *
 	 * @param string $originDir The origin directory path
 	 * @param string $targetDir The symbolic link name
-	 * @param Boolean $copyOnWindows Whether to copy files if on Windows
 	 *
 	 * @throws \Exception When symlink fails
 	 */
 	private function symlink($originDir, $targetDir) {
 		@mkdir(dirname($targetDir), 0777, true);
-	
+
 		$ok = false;
 		if (is_link($targetDir)) {
 			if (readlink($targetDir) != $originDir) {

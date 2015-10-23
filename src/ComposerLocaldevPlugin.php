@@ -1,15 +1,16 @@
 <?php
 namespace gossi\composer\localdev;
 
-use Composer\Plugin\PluginInterface;
-use Composer\IO\IOInterface;
 use Composer\Composer;
-use Composer\Script\Event;
-use Composer\Installer\InstallationManager;
-use Composer\Installer\PackageEvent;
 use Composer\DependencyResolver\Operation\InstallOperation;
 use Composer\DependencyResolver\Operation\UpdateOperation;
+use Composer\Installer\InstallationManager;
 use Composer\Installer\InstallerEvent;
+use Composer\Installer\PackageEvent;
+use Composer\IO\IOInterface;
+use Composer\Plugin\PluginInterface;
+use Composer\Script\Event;
+use Composer\Package\Link;
 
 class ComposerLocaldevPlugin implements PluginInterface {
 	
@@ -21,9 +22,29 @@ class ComposerLocaldevPlugin implements PluginInterface {
 	
 	public function activate(Composer $composer, IOInterface $io) {
 		$this->composer = $composer;
-
 		$this->repo = new LocalRepository($composer->getConfig());
-		$composer->getRepositoryManager()->addRepository($this->repo);
+
+		// root package
+		$root = $composer->getPackage();
+		
+		// adding requires from dependent local packages onto the root package
+		$requires = [];
+		$rootName = basename($root->getPrettyName());
+
+		foreach (array_keys($root->getRequires()) as $name) {
+			$package = $this->repo->findPackage($name, 'dev-live');
+			if ($package !== null) {
+				foreach ($package->getRequires() as $name => $require) {
+					if (strpos($name, '/') !== false) {
+						/* @var $require Link */
+						$requires[$name] = new Link($rootName, $require->getTarget(), $require->getConstraint());
+					}
+				}
+			}
+		}
+
+		$rootRequires = $root->getRequires();
+		$root->setRequires(array_merge($requires, $rootRequires));
 
 		$this->installer = new LocalInstaller($composer, $io, $this->repo);
 		$this->installer->setInstallManager($composer->getInstallationManager());
@@ -33,29 +54,29 @@ class ComposerLocaldevPlugin implements PluginInterface {
 		$this->installManager->addInstaller($this->installer);
 		$composer->setInstallationManager($this->installManager);
 		
-		// install scripts to hook into composer
-		$root = $composer->getPackage();
-		$scripts = $root->getScripts();
+// 		// install scripts to hook into composer
+// 		$root = $composer->getPackage();
+// 		$scripts = $root->getScripts();
 		
-		$preInstall = isset($scripts['pre-install-cmd']) ? $scripts['pre-install-cmd'] : array();
-		$preUpdate = isset($scripts['pre-update-cmd']) ? $scripts['pre-update-cmd'] : array();
-		$prePackageInstall = isset($scripts['pre-package-install']) ? $scripts['pre-package-install'] : array();
-		$prePackageUpdate = isset($scripts['pre-package-update']) ? $scripts['pre-package-update'] : array();
-		$preDependencySolving = isset($scripts['pre-dependencies-solving']) ? $scripts['pre-dependencies-solving'] : array();
+// 		$preInstall = isset($scripts['pre-install-cmd']) ? $scripts['pre-install-cmd'] : array();
+// 		$preUpdate = isset($scripts['pre-update-cmd']) ? $scripts['pre-update-cmd'] : array();
+// 		$prePackageInstall = isset($scripts['pre-package-install']) ? $scripts['pre-package-install'] : array();
+// 		$prePackageUpdate = isset($scripts['pre-package-update']) ? $scripts['pre-package-update'] : array();
+// 		$preDependencySolving = isset($scripts['pre-dependencies-solving']) ? $scripts['pre-dependencies-solving'] : array();
 		
-		$preInstall[] = 'gossi\\composer\\localdev\\ComposerLocaldevPlugin::preInstall';
-		$preUpdate[] = 'gossi\\composer\\localdev\\ComposerLocaldevPlugin::preInstall';
-		$prePackageInstall[] = 'gossi\\composer\\localdev\\ComposerLocaldevPlugin::prePackageInstall';
-		$prePackageUpdate[] = 'gossi\\composer\\localdev\\ComposerLocaldevPlugin::prePackageUpdate';
-		$preDependencySolving[] = 'gossi\\composer\\localdev\\ComposerLocaldevPlugin::preDependencySolving';
+// 		$preInstall[] = 'gossi\\composer\\localdev\\ComposerLocaldevPlugin::preInstall';
+// 		$preUpdate[] = 'gossi\\composer\\localdev\\ComposerLocaldevPlugin::preInstall';
+// 		$prePackageInstall[] = 'gossi\\composer\\localdev\\ComposerLocaldevPlugin::prePackageInstall';
+// 		$prePackageUpdate[] = 'gossi\\composer\\localdev\\ComposerLocaldevPlugin::prePackageUpdate';
+// 		$preDependencySolving[] = 'gossi\\composer\\localdev\\ComposerLocaldevPlugin::preDependencySolving';
 		
-		$scripts['pre-install-cmd'] = $preInstall;
-		$scripts['pre-update-cmd'] = $preUpdate;
-		$scripts['pre-package-install'] = $prePackageInstall;
-		$scripts['pre-package-update'] = $prePackageUpdate;
-		$scripts['pre-dependencies-solving'] = $preDependencySolving;
+// 		$scripts['pre-install-cmd'] = $preInstall;
+// 		$scripts['pre-update-cmd'] = $preUpdate;
+// 		$scripts['pre-package-install'] = $prePackageInstall;
+// 		$scripts['pre-package-update'] = $prePackageUpdate;
+// 		$scripts['pre-dependencies-solving'] = $preDependencySolving;
 		
-		$root->setScripts($scripts);
+// 		$root->setScripts($scripts);
 
 		self::$instance = $this;
 	}
