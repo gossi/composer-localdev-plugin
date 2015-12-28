@@ -30,14 +30,20 @@ class ComposerLocaldevPlugin implements PluginInterface {
 		// adding requires from dependent local packages onto the root package
 		$requires = [];
 		$rootName = basename($root->getPrettyName());
+		$require = array_keys($root->getRequires());
+		$requireDev = array_keys($root->getDevRequires());
+		$packages = array_unique(array_merge($require, $requireDev));
+		
+		// TODO: Only add requireDev when it is in dev mode.
+		
 
-		foreach (array_keys($root->getRequires()) as $name) {
-			$package = $this->repo->findPackage($name, 'dev-live');
+		foreach ($packages as $name) {
+			$package = $this->repo->findPackage($name, 'dev-live'); 
 			if ($package !== null) {
 				foreach ($package->getRequires() as $name => $require) {
 					if (strpos($name, '/') !== false) {
 						/* @var $require Link */
-						$requires[$name] = new Link($rootName, $require->getTarget(), $require->getConstraint());
+						$requires[$name] = new Link($rootName, $require->getTarget(), $require->getConstraint(), '', $require->getPrettyConstraint());
 					}
 				}
 			}
