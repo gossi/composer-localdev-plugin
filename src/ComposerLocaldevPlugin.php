@@ -28,35 +28,17 @@ class ComposerLocaldevPlugin implements PluginInterface {
 		$root = $composer->getPackage();
 		
 		// adding requires from dependent local packages onto the root package
-		$requires = [];
 		$rootName = basename($root->getPrettyName());
-		$require = array_keys($root->getRequires());
-		$requireDev = array_keys($root->getDevRequires());
 		
-		// TODO: Better way to see if this is in dev mode or not
-		$autoloadGenerator = $composer->getAutoloadGenerator();
-		$ref = new \ReflectionClass($autoloadGenerator);
-		$devModeProp = $ref->getProperty('devMode');
-		$devModeProp->setAccessible(true);
-		$devMode = $devModeProp->getValue($autoloadGenerator);
+		// merge in require from local packages
+		$packages = array_keys($root->getRequires());
+		$requires = $this->getLinks($packages, $rootName);
+		$root->setRequires(array_merge($requires, $root->getRequires()));
 		
-		$packages = $devMode ? array_merge($require, $requireDev) : $require;
-		$packages = array_unique($packages);
-
-		foreach ($packages as $name) {
-			$package = $this->repo->findPackage($name, 'dev-live'); 
-			if ($package !== null) {
-				foreach ($package->getRequires() as $name => $require) {
-					if (strpos($name, '/') !== false) {
-						/* @var $require Link */
-						$requires[$name] = new Link($rootName, $require->getTarget(), $require->getConstraint(), '', $require->getPrettyConstraint());
-					}
-				}
-			}
-		}
-
-		$rootRequires = $root->getRequires();
-		$root->setRequires(array_merge($requires, $rootRequires));
+		// merge in require-dev from local packages
+		$packages = array_keys($root->getDevRequires());
+		$requires = $this->getLinks($packages, $rootName);
+		$root->setDevRequires(array_merge($requires, $root->getDevRequires()));
 
 		$this->installer = new LocalInstaller($composer, $io, $this->repo);
 		$this->installer->setInstallManager($composer->getInstallationManager());
@@ -91,6 +73,23 @@ class ComposerLocaldevPlugin implements PluginInterface {
 // 		$root->setScripts($scripts);
 
 		self::$instance = $this;
+	}
+	
+	private function getLinks($packages, $rootName) {
+		$requires = [];
+		foreach ($packages as $name) {
+			$package = $this->repo->findPackage($name, 'dev-live');
+			if ($package !== null) {
+				foreach ($package->getRequires() as $name => $require) {
+					if (strpos($name, '/') !== false) {
+						/* @var $require Link */
+						$requires[$name] = new Link($rootName, $require->getTarget(), $require->getConstraint(), '', $require->getPrettyConstraint());
+					}
+				}
+			}
+		}
+		
+		return $requires;
 	}
 	
 	public static function preDependencySolving(InstallerEvent $event) {
