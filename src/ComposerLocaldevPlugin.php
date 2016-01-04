@@ -32,10 +32,16 @@ class ComposerLocaldevPlugin implements PluginInterface {
 		$rootName = basename($root->getPrettyName());
 		$require = array_keys($root->getRequires());
 		$requireDev = array_keys($root->getDevRequires());
-		$packages = array_unique(array_merge($require, $requireDev));
 		
-		// TODO: Only add requireDev when it is in dev mode.
+		// TODO: Better way to see if this is in dev mode or not
+		$autoloadGenerator = $composer->getAutoloadGenerator();
+		$ref = new \ReflectionClass($autoloadGenerator);
+		$devModeProp = $ref->getProperty('devMode');
+		$devModeProp->setAccessible(true);
+		$devMode = $devModeProp->getValue($autoloadGenerator);
 		
+		$packages = $devMode ? array_merge($require, $requireDev) : $require;
+		$packages = array_unique($packages);
 
 		foreach ($packages as $name) {
 			$package = $this->repo->findPackage($name, 'dev-live'); 
