@@ -1,4 +1,8 @@
 {
+	"name" : "gossi/composer-localdev-plugin",
+	"type" : "composer-plugin",
+	"description" : "Composer Plugin for local development",
+	"license" : "MIT",
 	"keywords" : [
 		"composer",
 		"local",
@@ -9,13 +13,9 @@
 			"gossi\\composer\\localdev\\" : "src"
 		}
 	},
-	"name" : "gossi/composer-localdev-plugin",
-	"type" : "composer-plugin",
-	"description" : "Composer Plugin for local development",
-	"license" : "MIT",
 	"require" : {
 		"php" : ">=5.3",
-		"composer-plugin-api" : "1.0.0"
+		"composer-plugin-api" : "^1.0"
 	},
 	"require-dev" : {
 		"composer/composer" : "master-dev"
