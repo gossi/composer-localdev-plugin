@@ -111,8 +111,12 @@ class LocalInstaller implements InstallerInterface {
 
 	public function install(InstalledRepositoryInterface $repo, PackageInterface $package) {
 // 		printf("Handle Install: %s\n", $package->getName());
-		$installer = $this->getDedicatedInstaller($package);
-		$installer->install($repo, $package);
+		// if this packages is handled but already symlinked, circumvent installation to suppress
+		// modified packaged warning (ask for discard)
+		if (!($this->handlePackage($package) && is_link($this->getInstallPath($package)))) { 
+			$installer = $this->getDedicatedInstaller($package);
+			$installer->install($repo, $package);
+		}
 
 		if ($this->handlePackage($package)) {
 			$this->ensureSymlink($package);
