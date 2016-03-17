@@ -80,6 +80,15 @@ class LocalInstaller implements InstallerInterface {
 	 * @throws \Exception When symlink fails
 	 */
 	private function symlink($originDir, $targetDir) {
+		// Windows logic
+		if (defined('PHP_WINDOWS_VERSION_MAJOR')) {			
+			exec('mklink /J ' . escapeshellarg($targetDir) . ' ' . escapeshellarg($originDir), $output, $resultCode);
+			
+			if ($resultCode === 0) {
+				return;
+			}
+		}
+		
 		@mkdir(dirname($targetDir), 0777, true);
 
 		$ok = false;
