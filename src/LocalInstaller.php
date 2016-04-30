@@ -57,6 +57,11 @@ class LocalInstaller implements InstallerInterface {
 		$installPath = $this->getDedicatedInstaller($package)->getInstallPath($package);
 		$originPath = $this->repo->getPath($package->getName());
 		
+		// return if link is already well placed
+		if (is_link($originPath) && readlink($originPath) == $installPath) {
+			return;
+		}
+		
 		// remove installation first...
 		if (file_exists($installPath)) {
 			$this->filesystem->removeDirectory($installPath);
@@ -81,10 +86,12 @@ class LocalInstaller implements InstallerInterface {
 	 */
 	private function symlink($originDir, $targetDir) {
 		// Windows logic
-		if (defined('PHP_WINDOWS_VERSION_MAJOR')) {			
-			exec('mklink /J ' . escapeshellarg($targetDir) . ' ' . escapeshellarg($originDir), $output, $resultCode);
+		if (defined('PHP_WINDOWS_VERSION_MAJOR')) {
+			$output = [];
+			$return = 0;
+			exec('mklink /J ' . escapeshellarg($targetDir) . ' ' . escapeshellarg($originDir), $output, $return);
 			
-			if ($resultCode === 0) {
+			if ($return === 0) {
 				return;
 			}
 		}
@@ -114,8 +121,18 @@ class LocalInstaller implements InstallerInterface {
 	}
 
 	public function uninstall(InstalledRepositoryInterface $repo, PackageInterface $package) {
-		$installer = $this->getDedicatedInstaller($package);
-		$installer->uninstall($repo, $package);
+		$installPath = $this->getInstallPath($package);
+		
+		// remove symlink, if package is handled and symlinked
+		if ($this->handlePackage($package) && is_link($installPath)) {
+			unlink($installPath);
+		}
+
+		// anyway, just use the regular installer
+		else {
+			$installer = $this->getDedicatedInstaller($package);
+			$installer->uninstall($repo, $package);
+		}
 	}
 
 	public function install(InstalledRepositoryInterface $repo, PackageInterface $package) {
@@ -141,10 +158,11 @@ class LocalInstaller implements InstallerInterface {
 	}
 
 	public function update(InstalledRepositoryInterface $repo, PackageInterface $initial, PackageInterface $target) {
-		$this->getDedicatedInstaller($initial)->update($repo, $initial, $target);
-		
-		if ($this->handlePackage($target)) {
+		// if package is already symlinked, skip composer update
+		if ($this->handlePackage($target) && is_link($this->getInstallPath($target))) {
 			$this->ensureSymlink($target);
+		} else {
+			$this->getDedicatedInstaller($initial)->update($repo, $initial, $target);
 		}
 	}
 
