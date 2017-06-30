@@ -87,7 +87,7 @@ class LocalInstaller implements InstallerInterface {
 	private function symlink($originDir, $targetDir) {
 		// Windows logic
 		if (defined('PHP_WINDOWS_VERSION_MAJOR')) {
-			$output = [];
+			$output = array();
 			$return = 0;
 			exec('mklink /J ' . escapeshellarg($targetDir) . ' ' . escapeshellarg($originDir), $output, $return);
 			

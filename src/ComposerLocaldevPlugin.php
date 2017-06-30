@@ -76,7 +76,7 @@ class ComposerLocaldevPlugin implements PluginInterface {
 	}
 	
 	private function getLinks($packages, $rootName) {
-		$requires = [];
+		$requires = array();
 		foreach ($packages as $name) {
 			$package = $this->repo->findPackage($name, 'dev-live');
 			if ($package !== null) {
