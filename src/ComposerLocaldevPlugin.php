@@ -11,6 +11,7 @@ use Composer\Package\Link;
 use Composer\Plugin\PluginInterface;
 use Composer\Script\Event;
 
+
 class ComposerLocaldevPlugin implements PluginInterface {
 
 	private static $instance;
@@ -90,6 +91,15 @@ class ComposerLocaldevPlugin implements PluginInterface {
 
 		return $requires;
 	}
+
+// 	public static function getSubscribedEvents() {
+// 		return [
+// 			'pre-dependency-solving' => 'preDependencySolving',
+// 			'pre-install-cmd' => 'preInstall',
+// 			'pre-package-install' => 'prePackageInstall',
+// 			'pre-package-update' => 'prePackageUpdate'
+// 		];
+// 	}
 
 	public static function preDependencySolving(InstallerEvent $event) {
 		// add repo for resolving dependencies - hum, will it work?
